@@ -1,0 +1,90 @@
+-- Tencent is pleased to support the open source community by making xLua available.
+-- Copyright (C) 2016 THL A29 Limited, a Tencent company. All rights reserved.
+-- Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
+-- http://opensource.org/licenses/MIT
+-- Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
+--local testLua = require"test"
+require"Snake"
+require"Food"
+local isGameStart = false
+local startBtn
+
+local timeSinceRun = 0
+local timeSinceStartGame = 0
+local snakeMoveSpeed = 0.5
+local timeText
+local scoreText
+local score = 0
+local testBtn
+function start()
+    print("GameManager.lua: start...")
+	snakeParentNode[1] = self.transform:FindChild("GameObjs/Snake")
+	OnStart()
+    InitUI()
+	local container = self.transform:FindChild("GameObjs/FoodContainer")
+	local trans1 = self.transform:FindChild("GameObjs/LeftUp (1)")
+	local trans2 = self.transform:FindChild("GameObjs/RightDown (1)")
+	InitFoodData(trans1,trans2,container)
+end
+
+function InitUI()
+    print("Init UI")
+    startBtn = self.transform:FindChild("UIRoot/Canvas/OperatePanel/StartBtn"):GetComponent("Button")
+    --AddSnakeBody(startBtn)
+	--TestCall(snakeBody)
+	startBtn.onClick:AddListener(function()
+			if(isGameStart)
+            then
+                isGameStart = false
+                startBtn.transform:FindChild("Text"):GetComponent("Text").text = "Start"
+            else
+                isGameStart = true
+                startBtn.transform:FindChild("Text"):GetComponent("Text").text = "Stop"
+				timeSinceRun = CS.UnityEngine.Time.time
+				Food()
+				
+            end
+end)
+    timeText = self.transform:FindChild("UIRoot/Canvas/OperatePanel/TimeText/Text"):GetComponent("Text")
+    scoreText = self.transform:FindChild("UIRoot/Canvas/OperatePanel/ScoreText/Text"):GetComponent("Text")
+    scoreText.text = "0"
+end
+
+function update()
+    print("GameManager.lua: update...")
+	AddTime()
+    -- local r = CS.UnityEngine.Vector3.up * CS.UnityEngine.Time.deltaTime * speed
+    -- self.transform:Rotate(r)
+    -- self:GetComponent("MeshRenderer").material.color=CS.UnityEngine.Color.red
+end
+
+function AddTime()
+	if(isGameStart)
+	then
+		timeSinceStartGame = timeSinceStartGame + CS.UnityEngine.Time.deltaTime
+		timeText.text = tostring(timeSinceStartGame)
+		if(CS.UnityEngine.Time.time - timeSinceRun >= snakeMoveSpeed)
+		then
+			timeSinceRun = CS.UnityEngine.Time.time
+			SnakeMove()
+		end
+		CheckEatFood()
+		KeyBoardListener()
+	end
+end
+
+function CheckEatFood()
+    food = GetFood()
+	if(CS.UnityEngine.Vector3.Distance(food.transform.position,snakeHead.transform.position) <=0.2)
+	then
+		score = score+1
+		scoreText.text = tostring(score)
+		SnakeGrowUp()
+		ChangeFoodPos()
+	end
+end
+
+
+function ondestroy()
+    print("GameManager.lua: destroy...")
+end

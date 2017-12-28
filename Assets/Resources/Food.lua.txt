@@ -1,0 +1,89 @@
+require"snake"
+local foodPosLeftUpLimiteTrans
+local foodPosRightDownLimiteTrans
+local allFoodPlacePos = {}
+local allFoodPlacePosCount = 0
+local foodContainer
+local food
+
+function InitFoodData(trans1,trans2,container,tempFood)
+	foodPosLeftUpLimiteTrans = trans1
+	foodPosRightDownLimiteTrans=trans2
+	foodContainer=container
+	food=tempFood
+end
+
+function Food()
+	GetAllFoodPlacePos()
+	CreateFood()
+end
+
+function GetFood()
+	return food
+end
+
+function GetAllFoodPlacePos()
+        local tempX = foodPosLeftUpLimiteTrans.position.x;
+        local limiteX = foodPosRightDownLimiteTrans.position.x;
+        local tempY = foodPosLeftUpLimiteTrans.position.y;
+        local limiteY = foodPosRightDownLimiteTrans.position.y;
+        while (tempX < limiteX - 0.4)
+        do
+            tempX =tempX+ 0.4
+            tempY = foodPosLeftUpLimiteTrans.position.y;
+            while (tempY > limiteY + 0.4)
+            do
+                tempY =tempY- 0.4
+				allFoodPlacePosCount = allFoodPlacePosCount+1
+				local pos = CS.UnityEngine.Vector3(tempX, tempY, 0)
+                allFoodPlacePos[allFoodPlacePosCount] = pos
+            end
+        end
+end
+
+function CreateFood()
+		local foodPre = CS.UnityEngine.Resources.Load("Food")
+        food = CS.UnityEngine.Object.Instantiate(foodPre)
+		food.transform:SetParent(foodContainer)
+        food.gameObject:SetActive(true)
+		local pos =  RandomFoodPos()
+        food.transform.position = pos
+end
+
+function ChangeFoodPos()
+		local pos =  RandomFoodPos()
+        food.transform.position = pos
+end
+
+function RandomFoodPos()
+        local index = CS.UnityEngine.Random.Range(1, #allFoodPlacePos+1)
+		index = math.ceil(index)
+        local pos = allFoodPlacePos[index]
+		for i=1,allFoodPlacePosCount,1
+		do
+			if(not IsCoverSnake(pos))
+			then
+				break
+			end
+			index = CS.UnityEngine.Random.Range(1, #allFoodPlacePos+1)
+            pos = allFoodPlacePos[index]
+		end
+		if(pos~=nil)
+		then
+			return pos
+		else
+			 return RandomFoodPos()
+		end
+end
+
+function IsCoverSnake(pos)
+        local tempSnake = snakeBodyList
+        for  i = 1,#tempSnake,1
+        do
+            if (CS.UnityEngine.Vector3.Distance(pos, tempSnake[i].transform.position) < 0.5)
+            then
+                return true
+            end
+        end
+        return false
+end

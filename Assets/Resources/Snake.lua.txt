@@ -1,0 +1,99 @@
+--require"GameManager"
+local DirectionUp,DirectionDown,DirectionLeft,DirectionRight= 1,2,3,4
+local snakeMoveSpeed = 0.1
+local isCanChangeDirection = false
+local snakeMoveDistance = 0.4
+local currentSnakeDirection = DirectionRight
+snakeParentNode = {}
+local snakeBodyPre
+snakeHead=0
+snakeBodyList = {}
+local snakeBodyCount = 0
+
+function OnStart()
+	print("SnakeLua:Start")
+	InitSnakeBody()
+	
+end
+
+function InitSnakeBody()
+		snakeBodyPre = CS.UnityEngine.Resources.Load("Body")
+        for i=1,3,1
+        do
+			local go = CS.UnityEngine.Object.Instantiate(snakeBodyPre)
+			go.transform:SetParent(snakeParentNode[1])
+			snakeBodyCount = snakeBodyCount+1
+			snakeBodyList[snakeBodyCount] = go
+			snakeBodyList[snakeBodyCount].gameObject:SetActive(true)
+			--SetSnakeBody(go)
+            --snakeBodyList.Add(Instantiate<GameObject>(snakeBodyPre, snakeParentNode).transform);
+            --snakeBodyList[i].gameObject.SetActive(true)
+            --GameManager.instance.SetSnakeBody(snakeBodyList[i].gameObject);
+        end
+        snakeHead = snakeBodyList[1];
+        snakeHead.transform.position = CS.UnityEngine.Vector3(0, 0, 0);
+        snakeHead:GetComponent("SpriteRenderer").material.color =CS.UnityEngine.Color.red;
+        snakeBodyList[2].transform.position = CS.UnityEngine.Vector3(-snakeMoveDistance * 1, 0, 0);
+        snakeBodyList[3].transform.position = CS.UnityEngine.Vector3(-snakeMoveDistance * 2, 0, 0);
+
+end
+
+function SnakeMove()
+	    --if(#snakeBodyList <= 0 | snakeBodyList == nil)
+        --then
+        --    return
+        --end
+        for i =#snakeBodyList,2,-1
+        do
+            snakeBodyList[i].transform.position = snakeBodyList[i - 1].transform.position
+        end
+        local snakeHeadCurPos = snakeBodyList[1].transform.position
+        local snakeHeadNextPos
+        if(currentSnakeDirection == DirectionUp)
+        then
+            snakeHeadNextPos = CS.UnityEngine.Vector3(snakeHeadCurPos.x, snakeHeadCurPos.y + snakeMoveDistance, 0)
+        elseif (currentSnakeDirection == DirectionDown)
+		then
+            snakeHeadNextPos = CS.UnityEngine.Vector3(snakeHeadCurPos.x, snakeHeadCurPos.y - snakeMoveDistance, 0)
+        elseif (currentSnakeDirection == DirectionLeft)
+		then
+            snakeHeadNextPos = CS.UnityEngine.Vector3(snakeHeadCurPos.x - snakeMoveDistance, snakeHeadCurPos.y, 0)
+        elseif (currentSnakeDirection == DirectionRight)
+		then
+            snakeHeadNextPos = CS.UnityEngine.Vector3(snakeHeadCurPos.x + snakeMoveDistance, snakeHeadCurPos.y, 0)
+        else
+            snakeHeadNextPos = CS.UnityEngine.Vector3(snakeHeadCurPos.x + snakeMoveDistance, snakeHeadCurPos.y, 0)
+		end
+        snakeBodyList[1].transform.position = snakeHeadNextPos
+end
+
+function SnakeGrowUp()
+		print("Snake Grow up")
+		local go = CS.UnityEngine.Object.Instantiate(snakeBodyPre)
+		go.transform:SetParent(snakeParentNode[1])
+		snakeBodyCount = snakeBodyCount + 1
+		snakeBodyList[snakeBodyCount] = go
+        local growSnakeBodyIndex = #snakeBodyList
+        snakeBodyList[growSnakeBodyIndex].gameObject:SetActive(true)
+        --GameManager.instance.SetSnakeBody(snakeBodyList[growSnakeBodyIndex].gameObject);
+        snakeBodyList[growSnakeBodyIndex].transform.position = snakeBodyList[growSnakeBodyIndex - 1].transform.position
+end
+
+function KeyBoardListener()
+        if(CS.UnityEngine.Input.GetKeyDown(CS.UnityEngine.KeyCode.UpArrow) and currentSnakeDirection ~= DirectionDown)
+        then
+            currentSnakeDirection = DirectionUp
+        end
+        if(CS.UnityEngine.Input.GetKeyDown(CS.UnityEngine.KeyCode.DownArrow) and currentSnakeDirection ~= DirectionUp)
+        then
+            currentSnakeDirection = DirectionDown
+        end
+        if(CS.UnityEngine.Input.GetKeyDown(CS.UnityEngine.KeyCode.LeftArrow) and currentSnakeDirection ~= DirectionRight)
+        then
+            currentSnakeDirection = DirectionLeft
+        end
+        if(CS.UnityEngine.Input.GetKeyDown(CS.UnityEngine.KeyCode.RightArrow) and currentSnakeDirection ~= DirectionLeft)
+        then
+            currentSnakeDirection = DirectionRight
+        end
+end
